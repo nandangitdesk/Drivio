@@ -1,7 +1,8 @@
 const userModel = require("../models/userModel");
 const { validationResult } = require("express-validator");
 const userServices = require("../services/userServices");
-const { get } = require("mongoose");
+
+const blacklistTokenModel = require("../models/blacklistTokenModel");
 
 const register = async (req, res, next) => {
   const errors = validationResult(req);
@@ -30,29 +31,29 @@ const register = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
-   const errors = validationResult(req);
-  
-   if(!errors.isEmpty()) {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
-   }
+  }
 
-   const { email, password } = req.body;
+  const { email, password } = req.body;
 
-   const user = await userModel.findOne({ email }).select("+password");
+  const user = await userModel.findOne({ email }).select("+password");
 
-   if (!user) {
-     return res.status(401).json({ error: "Invalid email or password" });
-   }
+  if (!user) {
+    return res.status(401).json({ error: "Invalid email or password" });
+  }
 
-   const isMatch = await user.comparePassword(password);
+  const isMatch = await user.comparePassword(password);
 
-   if (!isMatch) {
-     return res.status(401).json({ error: "Invalid email or password" });
-   }
+  if (!isMatch) {
+    return res.status(401).json({ error: "Invalid email or password" });
+  }
 
-   const token = await user.generateAuthToken();
-
-   res.status(200).json({ user, token });
+  const token = await user.generateAuthToken();
+  res.cookie("token", token);
+  res.status(200).json({ user, token });
 };
 
 const getUserprofile = async (req, res, next) => {
@@ -60,9 +61,16 @@ const getUserprofile = async (req, res, next) => {
   res.status(200).json({ user });
 };
 
+const logout = async (req, res, next) => {
+  res.clearCookie("token");
+  const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+  await blacklistTokenModel.create({ token });
+  res.status(200).json({ message: "Logout successful" });
+};
 
 module.exports = {
   register,
   login,
-  getUserprofile
+  getUserprofile,
+  logout,
 };
