@@ -1,5 +1,7 @@
 # Backend API Documentation (Drivio)
 
+## ``Users Authentication API Documentation``
+---
 ## `users/register` Endpoint 
 
 ### Overview
@@ -248,4 +250,269 @@ The request must include a valid authentication token:
 "message": "Logout successful"
 }
 ```
+---
+## ``Captains Authentication API Documentation``
+---
 
+## `/captains/register` Endpoint
+
+### Overview
+Registers a new captain by validating the input, hashing the password, and saving the captain's details to the database.
+
+### **Endpoint**
+
+- **URL:** `/captains/register`
+- **Method:** `POST`
+- **Content-Type:** `application/json`
+
+
+#### **Request Body**  
+The request body must be a JSON object containing the following fields:
+
+| Field                 | Type   | Description                                                  | Required |
+|-----------------------|--------|--------------------------------------------------------------|----------|
+| `fullname.firstname`  | String | The first name of the captain (minimum 3 characters).        | Yes      |
+| `fullname.lastname`   | String | The last name of the captain (minimum 3 characters).         | Yes      |
+| `email`               | String | A valid email address.                                       | Yes      |
+| `password`            | String | The password for the captain account (minimum 8 characters). | Yes      |
+| `vehicle.color`       | String | The color of the vehicle (minimum 3 characters).             | Yes      |
+| `vehicle.plate`       | String | The vehicle's license plate (minimum 3 characters).          | Yes      |
+| `vehicle.capacity`    | Number | The seating or load capacity of the vehicle (minimum value 1). | Yes      |
+| `vehicle.vehicleType` | String | The type of the vehicle (must be one of: `car`, `auto`, `motorcycle`). | Yes      |
+
+
+### **Responses**
+
+#### **Success (201 Created)**
+A captain is successfully registered, and a token is issued.
+
+```json
+{
+  "captain": {
+    "_id": "64f9a7c7c1e4ab1e8d76f123",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Doe"
+    },
+    "email": "john.doe@example.com",
+    "vehicle": {
+      "color": "Blue",
+      "plate": "AB123CD",
+      "capacity": 4,
+      "vehicleType": "car"
+    },
+    "status": "inactive",
+    "createdAt": "2024-11-26T12:00:00.000Z",
+    "updatedAt": "2024-11-26T12:00:00.000Z"
+  },
+  "token": "your.jwt.token.here"
+}
+```
+### Error (400 Bad Request)
+Invalid Input:
+
+```json
+{
+  "errors": [
+    {
+      "msg": "First name must be at least 3 characters long",
+      "param": "fullname.firstname",
+      "location": "body"
+    }
+  ]
+}
+```
+Email Already Exists:
+```json
+{
+  "error": "Captain already exists"
+}
+```
+
+---
+## `/captains/login` Endpoint
+
+### Overview
+This endpoint allows an existing captain to log in and receive an authentication token.
+
+---
+
+### **Endpoint**
+
+- **URL:** `/captains/login`
+- **Method:** `POST`
+- **Content-Type:** `application/json`
+
+---
+
+### **Request Requirements**
+
+#### **Headers**
+No authentication required.
+
+#### **Request Body**
+The request body must be a JSON object containing the following fields:
+
+| Field      | Type   | Description                                    | Required |
+|------------|--------|------------------------------------------------|----------|
+| `email`    | String | The registered captain's email address.        | Yes      |
+| `password` | String | The password for the captain's account.         | Yes      |
+
+---
+
+### **Responses**
+
+#### **Success (200 OK)**
+The captain is authenticated, and a token is issued.
+
+**Example Response:**
+```json
+{
+  "captain": {
+    "_id": "64f9a7c7c1e4ab1e8d76f123",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Doe"
+    },
+    "email": "john.doe@example.com",
+    "vehicle": {
+      "color": "Blue",
+      "plate": "AB123CD",
+      "capacity": 4,
+      "vehicleType": "car"
+    },
+    "status": "active",
+    "createdAt": "2024-11-26T12:00:00.000Z",
+    "updatedAt": "2024-11-26T12:00:00.000Z"
+  },
+  "token": "your.jwt.token.here"
+}
+```
+### Error Responses
+400 Bad Request: Invalid input data.
+```json
+{
+  "errors": [
+    {
+      "msg": "Please enter a valid email",
+      "param": "email",
+      "location": "body"
+    }
+  ]
+}
+```
+401 Unauthorized: Invalid email or password.
+```json
+{
+  "error": "Invalid email or password"
+}
+```
+---
+## `/captains/profile` Endpoint
+
+### Overview
+This endpoint allows an authenticated captain to retrieve their profile details.
+
+---
+
+### **Endpoint**
+
+- **URL:** `/captains/profile`
+- **Method:** `GET`
+- **Content-Type:** `application/json`
+- **Authentication:** Required (JWT Token)
+
+---
+
+### **Request Requirements**
+
+#### **Headers**
+The request must include a valid JWT token for authentication:
+
+| Header            | Type   | Description                      | Required |
+|-------------------|--------|----------------------------------|----------|
+| `Authorization`   | String | Bearer token for the captain.    | Yes      |
+
+---
+
+### **Responses**
+
+#### **Success (200 OK)**
+Returns the profile of the authenticated captain.
+
+**Example Response:**
+```json
+{
+  "captain": {
+    "_id": "64f9a7c7c1e4ab1e8d76f123",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Doe"
+    },
+    "email": "john.doe@example.com",
+    "vehicle": {
+      "color": "Blue",
+      "plate": "AB123CD",
+      "capacity": 4,
+      "vehicleType": "car"
+    },
+    "status": "active",
+    "createdAt": "2024-11-26T12:00:00.000Z",
+    "updatedAt": "2024-11-26T12:00:00.000Z"
+  }
+}
+```
+### Error Responses
+401 Unauthorized: The captain is not authenticated.
+
+```json
+{
+  "error": "Unauthorized access"
+}
+```
+---
+## `/captains/logout` Endpoint
+
+### Overview
+This endpoint allows an authenticated captain to log out by clearing the authentication token and adding it to a blacklist.
+
+---
+
+### **Endpoint**
+
+- **URL:** `/captains/logout`
+- **Method:** `GET`
+- **Content-Type:** `application/json`
+- **Authentication:** Required (JWT Token)
+
+---
+
+### **Request Requirements**
+
+#### **Headers**
+The request must include a valid JWT token for authentication:
+
+| Header            | Type   | Description                      | Required |
+|-------------------|--------|----------------------------------|----------|
+| `Authorization`   | String | Bearer token for the captain.    | Yes      |
+
+#### **Cookies**
+The request may include a `token` cookie for authentication:
+
+| Cookie    | Type   | Description                           | Required |
+|-----------|--------|---------------------------------------|----------|
+| `token`   | String | JWT token used for authentication.    | Yes      |
+
+---
+
+### **Responses**
+
+#### **Success (200 OK)**
+Indicates that the logout was successful, and the token is blacklisted.
+
+**Example Response:**
+```json
+{
+  "message": "Logout successful"
+}
+```
