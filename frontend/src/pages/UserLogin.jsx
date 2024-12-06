@@ -1,22 +1,50 @@
 import React, { useState } from "react";
 import { FiMail, FiLock, FiUser } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { UserDataContext } from "../context/UserContext";
+import { useContext } from "react";
 
 export default function UserLogin() {
   
+  const navigate = useNavigate();
+  const { user, setUser } = useContext(UserDataContext);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
 
-  const submitHandler = (e) => {
+  const submitHandler =async (e) => {
     e.preventDefault();
-    console.log(email, password);
+    
+    const userData = {
+      email: email,
+      password: password,
+    };
+
+    const response = axios.post(`${import.meta.env.VITE_BACKEND_URL}/users/login`, userData);
+    
+    response.then((res) => {
+      if (res.status === 200) {
+        const data = res.data;
+        setUser(data.user);
+        localStorage.setItem("token", data.token);
+        navigate("/home");
+      }
+    });
+    
+    setEmail("");
+    setPassword("");
   };
 
   return (
     <div className="min-h-screen bg-white p-6 flex justify-between flex-col">
-      <h1 className="text-3xl font-bold text-black">Drivio<span className="text-zinc-700">.-</span></h1>
+      <h1 className="text-3xl font-bold text-black">
+        Drivio<span className="text-zinc-700">.-</span>
+      </h1>
 
-      <form onSubmit={(e)=>submitHandler(e)} className="space-y-4 mb-60">
+      <form onSubmit={(e) => submitHandler(e)} className="space-y-4 mb-[5rem]">
         <div className="space-y-4">
           <div className="relative">
             <FiMail className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
@@ -64,15 +92,15 @@ export default function UserLogin() {
           <div className="h-px bg-gray-300 flex-1" />
         </div>
       </form>
-      <div >
-        
-        <button
+      <div>
+        <Link
+          to="/captain-login"
           type="button"
           className="w-full bg-green-500 text-white p-4 rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
         >
           <FiUser />
           Sign in as a Captain
-        </button>
+        </Link>
         <p className="text-gray-500 text-sm mt-8 text-center">
           By continuing, you agree to Drivio's Terms of Service and acknowledge
           that you've read our Privacy Policy
