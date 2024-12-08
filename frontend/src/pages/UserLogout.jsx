@@ -17,6 +17,7 @@ const UserLogout = () => {
         navigate("/login");
       }
     });
+    
 
   return <div>UserLogout</div>;
 };
